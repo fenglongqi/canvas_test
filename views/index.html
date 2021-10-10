@@ -3,12 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0"> -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Document</title>
+  <style>
+    body {
+      margin: 0;
+    }
+    .action {
+      position: fixed;
+      top : 50px;
+      right: 50px;
+    }
+  </style>
 </head>
 <body>
   <canvas id="canvas" width="600" height="600"></canvas>
-  <div>
+  <div class="action">
+      <p>控制区</p>
       <button id="clear">清除</button>
   </div>
   <script src="/socket.io/socket.io.js"></script>
