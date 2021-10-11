@@ -13,13 +13,9 @@ function getRadio() {
 }
 
 // socket链接
-var socket = io();
+var socket = io('/draw');
 
 socket.on("connect", () => {
-  socket.emit("set socket id", {
-    type: "screen",
-    id: socket.id,
-  });
 
   socket.emit("init worckbench width");
 });
@@ -39,7 +35,6 @@ socket.on("reset screen", function () {
 });
 
 socket.on("get workbench width", function (width, height) {
-  console.log(width);
   workbenchWidth = width;
   workbenchHeight = height;
 });
