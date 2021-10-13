@@ -1,3 +1,4 @@
+const { NotImplemented } = require("http-errors");
 const { Server } = require("socket.io");
 var socketio = {
   workbenchWidth: 0,
@@ -46,6 +47,14 @@ socketio.getSoketIo = function (server) {
     socket.on("reset canvas", function () {
       nps.emit("reset screen");
     });
+
+    socket.on("go back one step", function (stack) {
+      nps.emit('go back one step', stack)
+    })
+
+    socket.on("set strok style", function(color) {
+      nps.emit('set strok style', color)
+    })
   });
 };
 

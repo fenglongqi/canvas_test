@@ -31,10 +31,20 @@ socket.on("set point info", function (point) {
 });
 
 socket.on("reset screen", function () {
-  painting.resetCanvas();
+  painting.clearCanvas();
 });
 
 socket.on("get workbench width", function (width, height) {
   workbenchWidth = width;
   workbenchHeight = height;
 });
+
+socket.on('go back one step', function (stack) {
+  painting.setHistoryStack(stack)
+  painting.gobackRander()
+})
+
+
+socket.on('set strok style', function (color) {
+  painting.ctx.strokeStyle = color
+})
