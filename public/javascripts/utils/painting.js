@@ -5,10 +5,7 @@ class Painting {
     this.canvas = null;
     this.isMouseDown = false;
     this.historyStack = []
-    this.nowStack = {
-      points: [],
-      strokeStyle: '#fff'
-    }
+    this.lineStyle = { strokeStyle: '#fff' }
 
     this.initCanvas(id, width, height);
   }
@@ -56,12 +53,7 @@ class Painting {
 
   setMouseDownFalse() {
     this.isMouseDown = false;
-    this.historyStack.push(this.nowStack)
-    this.nowStack = { points: [], strokeStyle: this.ctx.strokeStyle}
-  }
-
-  addPointToStack(x, y) {
-    this.nowStack.points.push({x, y})
+    this.lineStyle = { strokeStyle: this.ctx.strokeStyle}
   }
 
   goBackStack() {
@@ -75,11 +67,11 @@ class Painting {
     const ctx = this.ctx
     ctx.save()
     this.historyStack.forEach(line => {
-      ctx.strokeStyle = line.strokeStyle
+      ctx.strokeStyle = line.lineStyle.strokeStyle
       line.points.forEach(({x, y}, index) => {
         if (index > 0) {
           this.setBasePoint(line.points[index-1].x, line.points[index-1].y);
-          this.printLine(x, y)
+          this.printLine({x, y, screenSize: line.screenSize})
         }
       })
     })
@@ -97,12 +89,10 @@ class Painting {
 
     if (_this.canvas.ontouchstart === void 0) {
       _this.canvas.addEventListener("mousedown", function (event) {
-        _this.setBasePoint(event.layerX, event.layerY);
-        _this.addPointToStack(event.layerX, event.layerY)
         _this.setMouseDownTure();
 
         _this.mouseDownHandle &&
-          _this.mouseDownHandle(event.layerX, event.layerY);
+          _this.mouseDownHandle(event.layerX, event.layerY, _this.lineStyle);
       });
 
       _this.canvas.addEventListener("mouseup", function () {
@@ -111,19 +101,17 @@ class Painting {
 
       _this.canvas.addEventListener("mousemove", function (event) {
         if (_this.isMouseDown) {
-          _this.printLine(event.layerX, event.layerY);
-          _this.addPointToStack(event.layerX, event.layerY)
           _this.mouseMoveHandle &&
             _this.mouseMoveHandle(event.layerX, event.layerY);
         }
       });
     } else {
       _this.canvas.addEventListener("touchstart", function (event) {
-        _this.setBasePoint(event.layerX, event.layerY);
+        // _this.setBasePoint(event.layerX, event.layerY);
         _this.setMouseDownTure();
 
         _this.mouseDownHandle &&
-          _this.mouseDownHandle(event.layerX, event.layerY);
+          _this.mouseDownHandle(event.layerX, event.layerY, _this.lineStyle);
       });
 
       _this.canvas.addEventListener("touchlend", function () {
@@ -132,7 +120,6 @@ class Painting {
 
       _this.canvas.addEventListener("touchmove", function (event) {
         if (_this.isMouseDown) {
-          _this.printLine(event.layerX, event.layerY);
 
           _this.mouseMoveHandle &&
             _this.mouseMoveHandle(event.layerX, event.layerY);
@@ -141,20 +128,45 @@ class Painting {
     }
   }
 
-  printLine(x, y) {
+  printLine(options) {
+    const {x, y, lineStyle, screenSize} = options
     const ctx = this.ctx;
+    ctx.save()
+    if (lineStyle) {
+      ctx.strokeStyle = lineStyle.strokeStyle
+    }
+
+    const radio = this.getRadio(screenSize)
+
     ctx.beginPath();
     ctx.lineWidth = 1;
-    ctx.moveTo(this.basePoint.x, this.basePoint.y);
-    ctx.lineTo(x, y)
+    ctx.moveTo(this.basePoint.x * radio, this.basePoint.y * radio);
+    ctx.lineTo(x * radio, y * radio)
     this.setBasePoint(x, y);
 
     ctx.stroke();
+
     ctx.closePath();
+    ctx.restore()
+  }
+
+  setLineStyle(lineStyle) {
+    this.lineStyle = lineStyle
+    this.setLineColor(lineStyle.strokeStyle)
   }
 
   setLineColor (color) {
     this.ctx.strokeStyle = color ||  "#fff";
-    this.nowStack.strokeStyle = color || "#fff";
+  }
+
+  getRadio (screenSize) {
+    let radio = 1
+    if (screenSize && screenSize.width && screenSize.height) {
+      const radio_w = window.innerWidth / screenSize.width;
+      const radio_h = window.innerHeight / screenSize.height;
+      radio =  Math.min(radio_w, radio_h);
+    }
+  
+    return radio;
   }
 }

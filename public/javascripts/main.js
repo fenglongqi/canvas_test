@@ -7,10 +7,27 @@ document.body.addEventListener(
 );
 
 // socket链接
-var socket = io();
+var socket = io('/draw');
 
 socket.on("connect", () => {
   sendWorkbachWidth();
+});
+
+socket.on('go back one step', (lines) => {
+  painting.setHistoryStack(lines)
+  painting.gobackRander(lines)
+})
+
+socket.on("set base point info", function (point) {
+  painting.setBasePoint(point.x, point.y);
+});
+
+socket.on("set point info", function (point, lineStyle, screenSize) {
+  painting.printLine({x: point.x, y: point.y, lineStyle, screenSize});
+});
+
+socket.on("reset screen", function () {
+  painting.clearCanvas();
 });
 
 class Workbench extends Painting {
@@ -19,8 +36,12 @@ class Workbench extends Painting {
     this.addCanvasListener();
   }
 
-  mouseDownHandle(x, y) {
-    socket.emit("get base point info", { x, y });
+  mouseDownHandle(x, y, lineStyle) {
+    const screenSize = {
+      width:  window.innerWidth,
+      height: window.innerHeight
+    }
+    socket.emit("get base point info", { x, y }, lineStyle, screenSize);
     sendWorkbachWidth();
   }
 
@@ -29,17 +50,12 @@ class Workbench extends Painting {
   }
 
   goBackStack() {
-    if ( this.historyStack.length > 0) {
-      this.historyStack.pop()
-      this.gobackRander()
-      socket.emit('go back one step', this.historyStack)
-    }
+    socket.emit('go back one step')
   }
 
   setLineColor(color) {
     this.ctx.strokeStyle = color ||  "#fff";
-    this.nowStack.strokeStyle = color || "#fff";
-    socket.emit('set strok style', color)
+    this.lineStyle.strokeStyle = color || "#fff";
   }
 }
 
@@ -77,6 +93,7 @@ function bindAction() {
   const lineColorControl = document.getElementById('line-color')
 
   lineColorControl.addEventListener('change', function (e) {
+    console.log(e.target.value)
     painting.setLineColor(e.target.value)
   })
 }

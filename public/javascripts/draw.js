@@ -13,7 +13,7 @@ function getRadio() {
 }
 
 // socket链接
-var socket = io('/draw');
+var socket = io('/screen');
 
 socket.on("connect", () => {
 
@@ -21,13 +21,11 @@ socket.on("connect", () => {
 });
 
 socket.on("set base point info", function (point) {
-  const radio = getRadio();
-  painting.setBasePoint(point.x * radio, point.y * radio);
+  painting.setBasePoint(point.x, point.y);
 });
 
-socket.on("set point info", function (point) {
-  const radio = getRadio();
-  painting.printLine(point.x * radio, point.y * radio);
+socket.on("set point info", function (point, lineStyle, screenSize) {
+  painting.printLine({x: point.x, y: point.y, lineStyle, screenSize});
 });
 
 socket.on("reset screen", function () {
