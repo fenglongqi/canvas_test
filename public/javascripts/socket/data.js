@@ -2,8 +2,8 @@
  * 数据处理
  */
 
-// 1.要对点的信息根据id进行存储到各个点当中
-// 2.
+const LINE_TYPE = 'line'
+const RESET_MARK_TYPE = 'resetMark'
 
 class Line {
     constructor(drawId, lineStyle = {}, screenSize = {
@@ -15,6 +15,7 @@ class Line {
         this.points = []
         this.lineStyle = lineStyle
         this.screenSize = screenSize
+        this.type = LINE_TYPE
     }
 
     addPoint(point) {
@@ -23,9 +24,40 @@ class Line {
 }
 
 class Point {
-    constructor(x, y) {
+    constructor({x, y}) {
         this.x = x
         this.y = y
+    }
+}
+
+class ResetMark {
+    constructor() {
+        this.type = RESET_MARK_TYPE
+    }
+}
+
+class HistoryStack {
+    constructor() {
+        this.stack = []
+    }
+
+    push(item) {
+        this.stack.push(item)
+    }
+
+    pop() {
+        return this.stack.pop()
+    }
+
+    goback() {
+        this.pop()
+
+        return this.getCurrentLines()
+    }
+    getCurrentLines() {
+        const resetMarkIndex = this.stack.map(item => item.type).lastIndexOf(RESET_MARK_TYPE)
+
+        return this.stack.filter((item, index) => resetMarkIndex < index)
     }
 }
 
@@ -33,7 +65,7 @@ module.exports = class SocketData {
     constructor() {
         this.lines = []
         this.activeLines = new Map()
-        this.history = [] // 历史记录
+        this.history = new HistoryStack() // 历史记录
     }
 
     addLine(drawId, lineStyle, screenSize) {
@@ -41,6 +73,7 @@ module.exports = class SocketData {
             const line = new Line(drawId, lineStyle, screenSize)
             this.activeLines.set(drawId, line)
             this.lines.push(line)
+            this.history.push(line)
         } else {
             throw Error('drawId 不能为空')
         }
@@ -49,31 +82,20 @@ module.exports = class SocketData {
     addPoint(drawId, point) {
         const activeLine = this.activeLines.get(drawId)
         if (activeLine) {
-            activeLine.addPoint(point)
+            activeLine.addPoint(new Point(point))
             return activeLine 
         }
     }
 
-    removeLine(drawId) {
-        // const activeLine = this.activeLines.get(drawId)
-        if (drawId) {
-            const index = this.lines.map((item) => item.drawId).lastIndexOf(drawId)
-
-            if (index > -1) {
-                this.lines.splice(index, 1)
-            }
-    
-            this.activeLines.set(drawId, null)
-        } else {
-            if (this.lines.length > 0) {
-                this.lines.pop()
-            }
-        }
-        return this.lines
+    goback() {
+        return this.history.goback()
     }
 
     clearLines() {
         this.lines = []
+    }
+    resetCanvas () {
+        this.history.push(new ResetMark())
     }
 }
 

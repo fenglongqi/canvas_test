@@ -54,13 +54,14 @@ socketio.getSoketIo = function (server) {
     });
 
     socket.on("reset canvas", function () {
-      socketData.clearLines()
+      // socketData.clearLines()
+      socketData.resetCanvas()
       screenNps.emit("reset screen");
       drawNps.emit("reset screen")
     });
 
     socket.on("go back one step", function () {
-      const lines = socketData.removeLine()
+      const lines = socketData.goback()
       drawNps.emit('go back one step', lines)
       screenNps.emit('go back one step', lines)
     })
